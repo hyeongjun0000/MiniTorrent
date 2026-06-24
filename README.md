@@ -1,7 +1,6 @@
 # MiniTorrent: TCP 기반 분산 파일 공유 시스템
 
-> **운영체제 및 네트워크 성능 분석 시뮬레이터 프로젝트**
-> 단일 서버 병목 현상을 해결하기 위해 고안된 P2P 기반의 멀티스레드 파일 병렬 다운로드 시스템
+> **운영체제 및 네트워크 성능 분석 시뮬레이터 프로젝트** - 단일 서버 병목 현상을 해결하기 위해 고안된 P2P 기반의 멀티스레드 파일 병렬 다운로드 시스템
 
 ##  프로젝트 개요
 기존의 Client-Server 모델은 대용량 파일 전송 시 서버의 대역폭 한계로 인해 치명적인 병목 현상이 발생함. 본 프로젝트는 이 문제를 해결하기 위해 파일 조각(Chunk) 단위 분할, Tracker 기반의 피어 탐색, 그리고 다중 소켓 멀티스레딩을 활용한 **응용 계층 P2P 프로토콜**을 C언어로 밑바닥부터 직접 설계하고 구현한 시뮬레이터이다.
@@ -30,6 +29,7 @@ make clean
 
 ## 테스트 시나리오
 
+```mermaid
 sequenceDiagram
     actor Client as Download Peer
     participant Tracker as Tracker (Port 7200)
@@ -63,9 +63,11 @@ sequenceDiagram
     Client->>Client: Merge Chunks (rebuilt.bin)
     Client->>Client: Verify SHA-256 (Original vs Rebuilt)
     Note right of Client: SHA256 MATCH (Success)
-    
+```
+
 **Step 1: 환경 초기화 및 더미 데이터 분할**
 이전 테스트의 잔여물을 제거하고, 6MB 크기의 더미 파일을 생성하여 1MB 단위 조각(Chunk)으로 분할 및 분배
+
 ```bash
 # 1. 빌드 및 기존 테스트 파일 초기화
 make
@@ -88,6 +90,7 @@ cp source_chunks/source.bin.part0003 seed2_chunks/
 cp source_chunks/source.bin.part0004 seed2_chunks/
 cp source_chunks/source.bin.part0005 seed2_chunks/
 ```
+
 **Step 2: P2P 네트워크 인프라 가동**
 아래의 명령어들은 각각 새로운 터미널 창을 열어 프로젝트 폴더로 이동한 뒤 독립적으로 실행해야 함.
 
@@ -101,8 +104,9 @@ cp source_chunks/source.bin.part0005 seed2_chunks/
 # [창 3] Seed 2 서버 가동 (Port: 9202)
 ./peer_server 9202 seed2_chunks
 ```
+
 **Step 3: 네트워크 등록 및 병렬 다운로드 시연**
-새로운 [창 4]를 열어 아래 명령어를 순차적으로 실행합니다. 트래커에 Seed들을 등록하고, 다중 피어로부터 데이터를 동시에 긁어옵니다.
+새로운 [창 4]를 열어 아래 명령어를 순차적으로 실행합니다. 트래커에 Seed들을 등록하고, 다중 피어로부터 데이터를 동시에 긁어옴.
 
 ```Bash
 # 1. Tracker에 Seed들의 파일 및 Chunk 보유 상태 등록
@@ -119,7 +123,7 @@ cp source_chunks/source.bin.part0005 seed2_chunks/
 
 # 4. 최종 무결성 검증
 ./verify_file source.bin rebuilt.bin
-(검증이 정상적으로 완료될 경우 터미널에 SHA256 MATCH 메시지가 출력됩니다.)
+(검증이 정상적으로 완료될 경우 터미널에 SHA256 MATCH 메시지가 출력됨.)
 ```
 ## 성능 분석
 - 측정 지표 : 멀티스레딩 기반 다중 Peer 연결 시의 Throughput(MB/s) 및 Elapsed Time(sec)
